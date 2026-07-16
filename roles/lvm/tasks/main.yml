@@ -1,0 +1,35 @@
+---
+- name: Create physical volume
+  lvg:
+    vg: "{{ lvm_vg }}"
+    pvs: "{{ lvm_device }}"
+
+- name: Create logical volume
+  lv:
+    vg: "{{ lvm_vg }}"
+    lv: "{{ lvm_lv }}"
+    size: 100%FREE
+
+- name: Create XFS filesystem
+  filesystem:
+    fstype: xfs
+    dev: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
+
+- name: Create mount directory
+  file:
+    path: "{{ lvm_mount }}"
+    state: directory
+
+- name: Mount filesystem
+  mount:
+    path: "{{ lvm_mount }}"
+    src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
+    fstype: xfs
+    state: mounted
+
+- name: Persist mount in fstab
+  mount:
+    path: "{{ lvm_mount }}"
+    src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
+    fstype: xfs
+    state: present
