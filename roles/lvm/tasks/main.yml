@@ -1,34 +1,34 @@
 ---
-- name: Create physical volume
-  lvg:
+- name: Create volume group
+  community.general.lvg:
     vg: "{{ lvm_vg }}"
     pvs: "{{ lvm_device }}"
 
 - name: Create logical volume
-  lv:
+  community.general.lvol:
     vg: "{{ lvm_vg }}"
     lv: "{{ lvm_lv }}"
     size: 100%FREE
 
 - name: Create XFS filesystem
-  filesystem:
+  community.general.filesystem:
     fstype: xfs
     dev: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
 
 - name: Create mount directory
-  file:
+  ansible.builtin.file:
     path: "{{ lvm_mount }}"
     state: directory
 
 - name: Mount filesystem
-  mount:
+  ansible.posix.mount:
     path: "{{ lvm_mount }}"
     src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
     fstype: xfs
     state: mounted
 
 - name: Persist mount in fstab
-  mount:
+  ansible.posix.mount:
     path: "{{ lvm_mount }}"
     src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
     fstype: xfs
