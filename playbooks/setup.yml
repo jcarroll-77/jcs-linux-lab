@@ -1,7 +1,7 @@
 ---
 - name: Basic setup for all nodes
   hosts: all
-  become: yes
+  become: true
 
   roles:
     - common
