@@ -1,8 +1,9 @@
 ---
-- name: Fail if VG name is not provided
-  fail:
-    msg: "You must specify lvm_vg=<vgname>"
-  when: lvm_vg is not defined
+- name: Check if /dev/sdc is already a PV in vgdata
+  command: vgs --noheadings -o pv_name vgdata
+  register: vg_pvs
+  changed_when: false
 
-- name: Extend VG
-  command: vgextend {{ lvm_vg }} {{ lvm_disk }}
+- name: Extend VG only if /dev/sdc is NOT already included
+  command: vgextend vgdata /dev/sdc
+  when: "'/dev/sdc' not in vg_pvs.stdout"
