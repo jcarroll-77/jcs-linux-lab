@@ -1,6 +1,6 @@
 ---
 - name: Basic setup for all nodes
-  hosts: all
+  hosts: nodes
   become: yes
 
   roles:
