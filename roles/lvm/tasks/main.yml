@@ -1,36 +1,38 @@
 ---
-- name: Create physical volume
-  community.general.lvg:
-    vg: "{{ lvm_vg }}"
-    pvs: "{{ lvm_device }}"
-
-- name: Create logical volume
-  community.general.lvol:
+# Resize LV (grow or shrink)
+- name: Resize logical volume
+  lvol:
     vg: "{{ lvm_vg }}"
     lv: "{{ lvm_lv }}"
-    size: 100%FREE
+    size: "{{ lvm_resize }}"
+  when:
+    - lvm_resize is defined
+    - lvm_resize | length > 0
 
-- name: Create XFS filesystem
-  community.general.filesystem:
-    fstype: xfs
-    dev: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
+# Grow filesystem (XFS)
+- name: Grow XFS filesystem
+  command: xfs_growfs "{{ lvm_mount }}"
+  when:
+    - lvm_resize is defined
+    - lvm_resize | length > 0
+    - ansible_facts['filesystem'][lvm_mount]['fstype'] == "xfs"
 
-- name: Create mount directory
-  ansible.builtin.file:
-    path: "{{ lvm_mount }}"
-    state: directory
+# Shrink filesystem (EXT4 only)
+- name: Shrink EXT4 filesystem
+  command: resize2fs "{{ lvm_mount }}" "{{ lvm_resize }}"
+  when:
+    - lvm_resize is defined
+    - lvm_resize | length > 0
+    - ansible_facts['filesystem'][lvm_mount]['fstype'] == "ext4"
 
-- name: Mount filesystem
-  ansible.posix.mount:
-    path: "{{ lvm_mount }}"
-    src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
-    fstype: xfs
-    state: mounted
-
-- name: Persist mount in fstab
-  ansible.posix.mount:
-    path: "{{ lvm_mount }}"
-    src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
-    fstype: xfs
-    state: present
+# Shrink LV (EXT4 only)
+- name: Shrink logical volume (EXT4 only)
+  lvol:
+    vg: "{{ lvm_vg }}"
+    lv: "{{ lvm_lv }}"
+    size: "{{ lvm_resize }}"
+  when:
+    - lvm_resize is defined
+    - lvm_resize | length > 0
+    - ansible_facts['filesystem'][lvm_mount]['fstype'] == "ext4"
 
