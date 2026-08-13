@@ -1,5 +1,5 @@
 ---
-- name: Create volume group
+- name: Create physical volume
   community.general.lvg:
     vg: "{{ lvm_vg }}"
     pvs: "{{ lvm_device }}"
@@ -33,3 +33,4 @@
     src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
     fstype: xfs
     state: present
+
