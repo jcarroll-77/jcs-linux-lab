@@ -11,6 +11,7 @@
     lvm_mount: /mnt/store
 
   roles:
+    - common
     - lvm_pv
     - lvm_vg
     - lvm_lv

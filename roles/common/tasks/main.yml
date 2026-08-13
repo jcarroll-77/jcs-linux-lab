@@ -1,0 +1,97 @@
+---
+# ============================
+# COMMON BASELINE ROLE
+# ============================
+
+# --- System Identity ---
+- name: Set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Ensure /etc/hosts contains controller and nodes
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "192.168.56.10 controller"
+    - "192.168.56.11 node1"
+    - "192.168.56.12 node2"
+
+- name: Set timezone
+  timezone:
+    name: Europe/London
+
+# --- Packages ---
+- name: Update package metadata
+  package:
+    update_cache: yes
+
+- name: Install baseline packages
+  package:
+    name:
+      - vim
+      - git
+      - curl
+      - wget
+      - net-tools
+      - lsof
+      - tree
+      - htop
+      - tmux
+    state: present
+
+# --- SSH Hardening ---
+- name: Disable root SSH login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
+
+- name: Disable SSH password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication no"
+
+- name: Restart SSH service
+  service:
+    name: sshd
+    state: restarted
+
+# --- Firewall Baseline ---
+- name: Ensure firewalld is installed
+  package:
+    name: firewalld
+    state: present
+
+- name: Ensure firewalld is running
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Allow SSH through firewall
+  firewalld:
+    service: ssh
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+# --- SELinux ---
+- name: Ensure SELinux is enforcing
+  selinux:
+    policy: targeted
+    state: enforcing
+
+# --- Sysctl Tuning ---
+- name: Apply baseline sysctl settings
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop:
+    - { name: "vm.swappiness", value: "10" }
+    - { name: "fs.inotify.max_user_watches", value: "524288" }
+    - { name: "net.ipv4.ip_forward", value: "1" }
