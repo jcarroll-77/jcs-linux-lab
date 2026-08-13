@@ -1,0 +1,17 @@
+---
+- name: Expand storage on nodes
+  hosts: nodes
+  become: true
+
+  vars:
+    lvm_disk: /dev/sdc
+    lvm_vg: vgdata
+    lvm_lv: lvstore
+    lvm_resize: +2G
+    lvm_mount: /mnt/store
+
+  roles:
+    - lvm_pv
+    - lvm_vg
+    - lvm_lv
+    - lvm_fs

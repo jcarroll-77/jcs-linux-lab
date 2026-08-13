@@ -1,0 +1,8 @@
+---
+- name: Fail if VG name is not provided
+  fail:
+    msg: "You must specify lvm_vg=<vgname>"
+  when: lvm_vg is not defined
+
+- name: Extend VG
+  command: vgextend {{ lvm_vg }} {{ lvm_disk }}

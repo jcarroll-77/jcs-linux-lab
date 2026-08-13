@@ -1,0 +1,11 @@
+---
+- name: Fail if lvm_resize is not a grow operation
+  fail:
+    msg: "lvm_resize must be +XG or +XM. Shrinking is not allowed."
+  when:
+    - lvm_resize is defined
+    - not lvm_resize.startswith('+')
+
+- name: Extend LV and filesystem
+  command: lvextend -r -L {{ lvm_resize }} /dev/{{ lvm_vg }}/{{ lvm_lv }}
+  when: lvm_resize is defined

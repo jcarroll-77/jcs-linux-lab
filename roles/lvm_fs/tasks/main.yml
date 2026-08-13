@@ -1,0 +1,12 @@
+---
+- name: Gather mount facts
+  setup:
+    filter: ansible_mounts
+
+- name: Grow filesystem (XFS or EXT4)
+  command: xfs_growfs {{ lvm_mount }}
+  when: "'xfs' in (ansible_mounts | selectattr('mount', 'equalto', lvm_mount) | map(attribute='fstype') | list)"
+
+- name: Grow EXT4 filesystem
+  command: resize2fs {{ lvm_mount }}
+  when: "'ext4' in (ansible_mounts | selectattr('mount', 'equalto', lvm_mount) | map(attribute='fstype') | list)"

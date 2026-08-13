@@ -1,7 +1,0 @@
----
-- name: Configure LVM on node1 and node2
-  hosts: nodes
-  become: true
-
-  roles:
-    - lvm

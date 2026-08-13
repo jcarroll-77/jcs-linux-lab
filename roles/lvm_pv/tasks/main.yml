@@ -1,0 +1,20 @@
+---
+- name: Fail if disk is not provided
+  fail:
+    msg: "You must specify lvm_disk=/dev/sdX"
+  when: lvm_disk is not defined
+
+- name: Check if disk exists
+  stat:
+    path: "{{ lvm_disk }}"
+  register: disk_check
+
+- name: Fail if disk does not exist
+  fail:
+    msg: "Disk {{ lvm_disk }} does not exist"
+  when: not disk_check.stat.exists
+
+- name: Create PV
+  command: pvcreate {{ lvm_disk }}
+  args:
+    creates: "/dev/{{ lvm_disk | basename }}"
