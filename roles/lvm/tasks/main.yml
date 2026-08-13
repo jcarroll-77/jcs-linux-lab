@@ -1,46 +1,11 @@
 ---
-# Resize LV (grow or shrink)
-- name: Resize logical volume
-  lvol:
-    vg: "{{ lvm_vg }}"
-    lv: "{{ lvm_lv }}"
-    size: "{{ lvm_resize }}"
-  when:
-    - lvm_resize is defined
-    - lvm_resize | length > 0
-
-# Grow filesystem (XFS)
-- name: Grow XFS filesystem
-  command: xfs_growfs "{{ lvm_mount }}"
-  when:
-    - lvm_resize is defined
-    - lvm_resize | length > 0
-    - ansible_facts['filesystem'][lvm_mount]['fstype'] == "xfs"
-
-# Shrink filesystem (EXT4 only)
-- name: Shrink EXT4 filesystem
-  command: resize2fs "{{ lvm_mount }}" "{{ lvm_resize }}"
-  when:
-    - lvm_resize is defined
-    - lvm_resize | length > 0
-    - ansible_facts['filesystem'][lvm_mount]['fstype'] == "ext4"
-
-# Shrink LV (EXT4 only)
-- name: Shrink logical volume (EXT4 only)
-  lvol:
-    vg: "{{ lvm_vg }}"
-    lv: "{{ lvm_lv }}"
-    size: "{{ lvm_resize }}"
-  when:
-    - lvm_resize is defined
-    - lvm_resize | length > 0
-    - ansible_facts['filesystem'][lvm_mount]['fstype'] == "ext4"
-
+# SAFETY: Require manual disk selection
 - name: Fail if disk is not provided
   fail:
     msg: "You must specify lvm_disk=/dev/sdX"
   when: lvm_disk is not defined
 
+# SAFETY: Ensure disk exists
 - name: Check if disk exists
   stat:
     path: "{{ lvm_disk }}"
@@ -51,14 +16,25 @@
     msg: "Disk {{ lvm_disk }} does not exist on this node"
   when: not disk_check.stat.exists
 
+# Create PV
 - name: Create PV
   command: pvcreate {{ lvm_disk }}
   args:
     creates: "/dev/{{ lvm_disk | basename }}"
 
+# Extend VG
 - name: Extend VG
-  command: vgextend vgdata {{ lvm_disk }}
+  command: vgextend {{ lvm_vg }} {{ lvm_disk }}
 
-- name: Extend LV
-  command: lvextend -r -L +{{ lvm_resize }} /dev/vgdata/lvstore
+# SAFETY: Only allow grow operations (+XG)
+- name: Fail if lvm_resize is not a grow operation
+  fail:
+    msg: "lvm_resize must be a grow value like +1G, +2G, +500M. Shrinking is not allowed."
+  when:
+    - lvm_resize is defined
+    - not lvm_resize.startswith('+')
+
+# Grow LV and filesystem (XFS or EXT4)
+- name: Extend LV and filesystem
+  command: lvextend -r -L {{ lvm_resize }} /dev/{{ lvm_vg }}/{{ lvm_lv }}
   when: lvm_resize is defined
