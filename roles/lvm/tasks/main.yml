@@ -36,3 +36,29 @@
     - lvm_resize | length > 0
     - ansible_facts['filesystem'][lvm_mount]['fstype'] == "ext4"
 
+- name: Fail if disk is not provided
+  fail:
+    msg: "You must specify lvm_disk=/dev/sdX"
+  when: lvm_disk is not defined
+
+- name: Check if disk exists
+  stat:
+    path: "{{ lvm_disk }}"
+  register: disk_check
+
+- name: Fail if disk does not exist
+  fail:
+    msg: "Disk {{ lvm_disk }} does not exist on this node"
+  when: not disk_check.stat.exists
+
+- name: Create PV
+  command: pvcreate {{ lvm_disk }}
+  args:
+    creates: "/dev/{{ lvm_disk | basename }}"
+
+- name: Extend VG
+  command: vgextend vgdata {{ lvm_disk }}
+
+- name: Extend LV
+  command: lvextend -r -L +{{ lvm_resize }} /dev/vgdata/lvstore
+  when: lvm_resize is defined
