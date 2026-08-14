@@ -1,6 +1,6 @@
-lvm_resize: "+2G"        # grow LV by 2G
-lvm_mount: "/mnt/store"  # mount point
+---
+lvm_disk: "/dev/sdb"
 lvm_vg: "vgdata"
 lvm_lv: "lvstore"
-timezone: "Europe/London"
-
+lvm_mount: "/mnt/store"
+lvm_resize: "+2G"
