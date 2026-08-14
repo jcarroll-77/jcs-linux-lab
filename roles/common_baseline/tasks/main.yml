@@ -20,25 +20,23 @@
 
 - name: Set timezone
   timezone:
-    name: Europe/London
+    name: "{{ timezone }}"
 
 # --- Packages ---
 - name: Update package metadata
-  package:
+  dnf:
     update_cache: yes
 
 - name: Install baseline packages
-  package:
-    name:
-      - vim
-      - git
-      - curl
-      - wget
-      - net-tools
-      - lsof
-      - tree
-      - tmux
+  dnf:
+    name: "{{ baseline_packages }}"
     state: present
+
+# --- MOTD ---
+- name: Deploy MOTD
+  template:
+    src: motd.j2
+    dest: /etc/motd
 
 # --- SSH Hardening ---
 - name: Disable root SSH login
@@ -46,21 +44,18 @@
     path: /etc/ssh/sshd_config
     regexp: "^PermitRootLogin"
     line: "PermitRootLogin no"
+  notify: restart sshd
 
 - name: Disable SSH password authentication
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: "^PasswordAuthentication"
     line: "PasswordAuthentication no"
-
-- name: Restart SSH service
-  service:
-    name: sshd
-    state: restarted
+  notify: restart sshd
 
 # --- Firewall Baseline ---
 - name: Ensure firewalld is installed
-  package:
+  dnf:
     name: firewalld
     state: present
 
@@ -90,7 +85,5 @@
     value: "{{ item.value }}"
     state: present
     reload: yes
-  loop:
-    - { name: "vm.swappiness", value: "10" }
-    - { name: "fs.inotify.max_user_watches", value: "524288" }
-    - { name: "net.ipv4.ip_forward", value: "1" }
+  loop: "{{ sysctl_settings }}"
+  notify: reload sysctl

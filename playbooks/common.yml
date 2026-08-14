@@ -1,0 +1,7 @@
+---
+- name: Apply common baseline configuration to all servers
+  hosts: all
+  become: true
+
+  roles:
+    - common

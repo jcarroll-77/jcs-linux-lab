@@ -1,0 +1,17 @@
+baseline_packages:
+  - vim
+  - git
+  - curl
+  - wget
+  - net-tools
+  - lsof
+  - tree
+  - tmux
+  - btop
+
+timezone: "Europe/London"
+
+sysctl_settings:
+  - { name: "vm.swappiness", value: "10" }
+  - { name: "fs.inotify.max_user_watches", value: "524288" }
+  - { name: "net.ipv4.ip_forward", value: "1" }
