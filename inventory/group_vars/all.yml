@@ -9,3 +9,7 @@ baseline_packages:
   - tar
   - unzip
   - git
+
+sysctl_settings:
+  - { key: "net.ipv4.ip_forward", value: "1" }
+  - { key: "vm.swappiness", value: "10" }
