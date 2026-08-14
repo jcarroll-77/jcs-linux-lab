@@ -1,2 +1,11 @@
 ---
 timezone: "Europe/London"
+
+baseline_packages:
+  - vim
+  - curl
+  - wget
+  - net-tools
+  - tar
+  - unzip
+  - git
