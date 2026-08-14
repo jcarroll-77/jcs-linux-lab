@@ -1,0 +1,13 @@
+---
+- name: Configure entire lab environment
+  hosts: all
+  become: true
+
+  roles:
+    - common
+
+    # LVM pipeline (runs in correct order)
+    - lvm_pv
+    - lvm_vg
+    - lvm_lv
+    - lvm_fs
