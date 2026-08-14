@@ -11,5 +11,5 @@ baseline_packages:
   - git
 
 sysctl_settings:
-  - { key: "net.ipv4.ip_forward", value: "1" }
-  - { key: "vm.swappiness", value: "10" }
+  - { name: "net.ipv4.ip_forward", value: "1" }
+  - { name: "vm.swappiness", value: "10" }
